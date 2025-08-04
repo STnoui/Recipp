@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,13 +10,26 @@ import ReactMarkdown from "react-markdown";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Terminal } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import { Header } from "@/components/Header";
+import { FullPageLoader } from "@/components/Loader";
 
 const Index = () => {
+  const { session, loading } = useAuth();
+  const navigate = useNavigate();
+
   const [file, setFile] = useState<File | null>(null);
   const [recipe, setRecipe] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!loading && !session) {
+      navigate("/login", { replace: true });
+    }
+  }, [session, loading, navigate]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -51,11 +64,9 @@ const Index = () => {
       });
 
       if (error) {
-        // This will catch network-level errors, but not application errors
         throw error;
       }
 
-      // Check the response body for our application-level error
       if (data.error) {
         const fullError = JSON.stringify(data.error, null, 2);
         setApiError(fullError);
@@ -64,7 +75,6 @@ const Index = () => {
         setRecipe(data.recipe);
         showSuccess("Your recipe is ready!");
       } else {
-        // This case handles an unexpected response format from the server
         throw new Error("Received an unexpected response format from the server.");
       }
 
@@ -78,8 +88,13 @@ const Index = () => {
     }
   };
 
+  if (loading || !session) {
+    return <FullPageLoader />;
+  }
+
   return (
     <div className="container mx-auto p-4 md:p-8 min-h-screen flex flex-col items-center bg-gray-50 dark:bg-gray-900">
+      <Header />
       <main className="w-full max-w-2xl flex-grow">
         <Card className="w-full">
           <CardHeader>
