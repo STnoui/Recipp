@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext, FC, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
+import { showError } from '@/utils/toast';
 
 interface AuthContextType {
   session: Session | null;
@@ -38,22 +39,32 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const signInAsDeveloper = async () => {
     if (import.meta.env.DEV) {
       const email = `dev-${Date.now()}@example.com`;
-      const password = 'password';
+      // Using a stronger password to avoid potential rejection by Supabase's password policy.
+      const password = 'strong-dev-password-123!';
       
-      // Attempt to sign up the dev user. If they already exist, Supabase will return the user.
+      // First, we sign up a new, unique user for this dev session.
       const { error: signUpError } = await supabase.auth.signUp({ email, password });
-      if (signUpError && !signUpError.message.includes('User already registered')) {
+
+      if (signUpError) {
         console.error('Dev sign-up error:', signUpError);
+        showError(`Dev sign-up failed: ${signUpError.message}`);
         return;
       }
 
-      // Sign in the user
+      // After a successful sign-up, we immediately sign in. This ensures a session is created,
+      // even if the project has email verification enabled.
       const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      
       if (signInError) {
         console.error('Dev sign-in error:', signInError);
+        showError(`Dev sign-in failed: ${signInError.message}`);
       }
+      // If sign-in is successful, the onAuthStateChange listener will update the session
+      // and the user will be redirected automatically.
     } else {
-      console.error('Developer login is only available in development mode.');
+      const message = 'Developer login is only available in development mode.';
+      console.error(message);
+      showError(message);
     }
   };
 
