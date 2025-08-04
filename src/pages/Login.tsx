@@ -28,6 +28,7 @@ const Login = () => {
                     supabaseClient={supabase}
                     appearance={{ theme: ThemeSupa }}
                     providers={['google']}
+                    onlyThirdPartyProviders={true}
                     theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}
                 />
                 {import.meta.env.DEV && (
