@@ -8,18 +8,22 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import { showError, showSuccess } from "@/utils/toast";
 import ReactMarkdown from "react-markdown";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Terminal } from "lucide-react";
 
 const Index = () => {
   const [file, setFile] = useState<File | null>(null);
   const [recipe, setRecipe] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
-      setRecipe(null); // Clear previous recipe
+      setRecipe(null);
+      setApiError(null);
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreview(reader.result as string);
@@ -36,6 +40,7 @@ const Index = () => {
 
     setIsLoading(true);
     setRecipe(null);
+    setApiError(null);
 
     const formData = new FormData();
     formData.append('image', file);
@@ -54,21 +59,18 @@ const Index = () => {
 
     } catch (error: any) {
       console.error("Full error object from Supabase:", error);
-
-      // Default error message
-      let displayMessage = error.message || "An unexpected error occurred.";
-
-      // If we have a more specific error from the function, use that.
-      if (error.context && error.context.error) {
-        displayMessage = error.context.error;
-        if (error.context.details) {
-          // Append the raw details string from the server.
-          // This will contain the actual error from the Google API.
-          displayMessage += `\nDetails: ${error.context.details}`;
-        }
+      
+      let fullError = "An unexpected error occurred.";
+      if (error.context) {
+        // Stringify the whole context to get all details.
+        fullError = JSON.stringify(error.context, null, 2);
+      } else {
+        fullError = error.message;
       }
       
-      showError(displayMessage);
+      setApiError(fullError);
+      showError("An error occurred. See details below the button.");
+
     } finally {
       setIsLoading(false);
     }
@@ -99,7 +101,19 @@ const Index = () => {
               {isLoading ? "Generating Recipe..." : "Generate Recipe"}
             </Button>
 
-            {isLoading && (
+            {apiError && (
+              <Alert variant="destructive">
+                <Terminal className="h-4 w-4" />
+                <AlertTitle>API Error</AlertTitle>
+                <AlertDescription>
+                  <pre className="whitespace-pre-wrap break-all font-mono text-xs">
+                    {apiError}
+                  </pre>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {isLoading && !apiError && (
               <div className="space-y-4 pt-4">
                 <Skeleton className="h-8 w-1/2" />
                 <Skeleton className="h-4 w-full" />
