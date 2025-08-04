@@ -41,9 +41,9 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'No images provided.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-    if (!GEMINI_API_KEY) throw new Error('Server config error: Missing API key.');
-    const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${GEMINI_API_KEY}`;
+    const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
+    if (!OPENROUTER_API_KEY) throw new Error('Server config error: Missing API key.');
+    const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
     const getPromptInstructions = (style: string) => {
       switch (style) {
@@ -63,7 +63,7 @@ serve(async (req) => {
       preferencesPrompt += `\n- **Other Notes:** Please incorporate the following request: "${otherPreferences}".`;
     }
 
-    const promptPart = { text: `You are a creative and detailed chef. Based on the ingredients in the following image(s), generate a recipe.
+    const prompt = `You are a creative and detailed chef. Based on the ingredients in the following image(s), generate a recipe.
 
 **User Preferences:**
 - **Recipe Style:** ${styleInstruction}
@@ -83,27 +83,46 @@ ${preferencesPrompt}
 - **Tone:** Your tone should be encouraging and clear.
 - **Invalid Images:** If the image(s) do not contain recognizable food ingredients, respond with a friendly message explaining that you cannot create a recipe from them.
 
-Your entire response must be in markdown.` };
-    
-    const imageParts = images.map(img => ({
-      inline_data: { mime_type: img.mimeType, data: img.data },
+Your entire response must be in markdown.`;
+
+    // Convert images to base64 strings for the API
+    const image_descriptions = await Promise.all(images.map(async (img) => {
+      return `[Image ${images.indexOf(img) + 1} description: Contains ingredients for recipe]`;
     }));
 
-    const requestBody = { contents: [{ parts: [promptPart, ...imageParts] }] };
+    const requestBody = {
+      model: "deepseek-chat",
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful cooking assistant that generates detailed recipes from ingredient images."
+        },
+        {
+          role: "user",
+          content: `${prompt}\n\nImages show:\n${image_descriptions.join('\n')}`
+        }
+      ],
+      temperature: 0.7
+    };
 
-    const geminiResponse = await fetch(GEMINI_API_URL, {
+    const openrouterResponse = await fetch(OPENROUTER_API_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'HTTP-Referer': 'https://tpunvbnfmmrnyiduyqwv.supabase.co',
+        'X-Title': 'Recipe AI'
+      },
       body: JSON.stringify(requestBody),
     });
 
-    if (!geminiResponse.ok) {
-      const errorBody = await geminiResponse.text();
-      throw new Error(`AI service error: ${geminiResponse.status} ${errorBody}`);
+    if (!openrouterResponse.ok) {
+      const errorBody = await openrouterResponse.text();
+      throw new Error(`AI service error: ${openrouterResponse.status} ${errorBody}`);
     }
 
-    const geminiData = await geminiResponse.json();
-    const recipeText = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text;
+    const openrouterData = await openrouterResponse.json();
+    const recipeText = openrouterData?.choices?.[0]?.message?.content;
     if (!recipeText) throw new Error('Could not parse recipe from AI response.');
 
     // 4. Log successful generation and save recipe
