@@ -38,11 +38,10 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   const signInAsDeveloper = async () => {
     if (import.meta.env.DEV) {
-      const email = `dev-${Date.now()}@example.com`;
-      // Using a stronger password to avoid potential rejection by Supabase's password policy.
+      const randomString = Math.random().toString(36).substring(2, 10);
+      const email = `dev-${randomString}@example.com`;
       const password = 'strong-dev-password-123!';
       
-      // First, we sign up a new, unique user for this dev session.
       const { error: signUpError } = await supabase.auth.signUp({ email, password });
 
       if (signUpError) {
@@ -51,16 +50,12 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         return;
       }
 
-      // After a successful sign-up, we immediately sign in. This ensures a session is created,
-      // even if the project has email verification enabled.
       const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
       
       if (signInError) {
         console.error('Dev sign-in error:', signInError);
         showError(`Dev sign-in failed: ${signInError.message}`);
       }
-      // If sign-in is successful, the onAuthStateChange listener will update the session
-      // and the user will be redirected automatically.
     } else {
       const message = 'Developer login is only available in development mode.';
       console.error(message);
