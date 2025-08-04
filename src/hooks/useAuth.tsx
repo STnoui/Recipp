@@ -39,7 +39,8 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const signInAsDeveloper = async () => {
     if (import.meta.env.DEV) {
       const randomString = Math.random().toString(36).substring(2, 10);
-      const email = `dev-${randomString}@example.com`;
+      // Using a different domain to avoid potential blocklists and align with user settings.
+      const email = `dev-${randomString}@local.dev`;
       const password = 'strong-dev-password-123!';
       
       const { error: signUpError } = await supabase.auth.signUp({ email, password });
