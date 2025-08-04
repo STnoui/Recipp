@@ -1,11 +1,14 @@
 {
-  "extends": "./deno.json",
   "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "lib": ["esnext", "deno.ns"],
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
-    "noEmit": true
+    "noEmit": true,
+    "strict": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "https://esm.sh/react@18.2.0"
   },
-  "include": [
-    "./functions/**/*"
-  ]
+  "include": ["./functions/**/*"]
 }

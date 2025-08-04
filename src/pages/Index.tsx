@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { showError, showSuccess } from "@/utils/toast";
 import ReactMarkdown from "react-markdown";
@@ -14,12 +12,25 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { FullPageLoader } from "@/components/Loader";
+import { ImageUploader } from "@/components/ImageUploader";
+
+const toBase64 = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      const result = reader.result as string;
+      const base64 = result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = (error) => reject(error);
+  });
 
 const Index = () => {
   const { session, loading } = useAuth();
   const navigate = useNavigate();
 
-  const [ingredients, setIngredients] = useState<string>("");
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [recipe, setRecipe] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -31,8 +42,8 @@ const Index = () => {
   }, [session, loading, navigate]);
 
   const handleSubmit = async () => {
-    if (!ingredients.trim()) {
-      showError("Please enter some ingredients.");
+    if (imageFiles.length === 0) {
+      showError("Please upload at least one image of your ingredients.");
       return;
     }
 
@@ -41,22 +52,18 @@ const Index = () => {
     setApiError(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('generate-recipe', {
-        body: { prompt: ingredients },
+      const base64Images = await Promise.all(imageFiles.map(toBase64));
+
+      const { data, error } = await supabase.functions.invoke('generate-recipe-from-images', {
+        body: { images: base64Images },
       });
 
       if (error) {
-        throw error;
+        throw new Error(error.message);
       }
 
       if (data.error) {
-        // Handle specific "limit reached" error from the function
-        if (data.error.includes("daily limit")) {
-            setApiError(data.error);
-        } else {
-            const fullError = typeof data.error === 'object' ? JSON.stringify(data.error, null, 2) : data.error;
-            setApiError(fullError);
-        }
+        setApiError(data.error);
         showError("An error occurred. See details below.");
       } else if (data.recipe) {
         setRecipe(data.recipe);
@@ -66,9 +73,8 @@ const Index = () => {
       }
 
     } catch (error: any) {
-      console.error("Full error object from Supabase:", error);
-      const fullError = JSON.stringify(error, null, 2);
-      setApiError(fullError);
+      const errorMessage = error.message || JSON.stringify(error);
+      setApiError(`A critical error occurred: ${errorMessage}`);
       showError("A critical error occurred while communicating with the server.");
     } finally {
       setIsLoading(false);
@@ -90,19 +96,10 @@ const Index = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="ingredients">Enter your ingredients (e.g., "chicken breast, rice, broccoli")</Label>
-              <Textarea
-                id="ingredients"
-                placeholder="What do you have in your kitchen?"
-                value={ingredients}
-                onChange={(e) => setIngredients(e.target.value)}
-                rows={4}
-              />
-            </div>
+            <ImageUploader onImagesChange={setImageFiles} disabled={isLoading} />
 
-            <Button onClick={handleSubmit} disabled={isLoading || !ingredients.trim()} className="w-full">
-              {isLoading ? "Generating Recipe..." : "Generate Recipe"}
+            <Button onClick={handleSubmit} disabled={isLoading || imageFiles.length === 0} className="w-full">
+              {isLoading ? "Generating Recipe..." : "Generate Recipe from Images"}
             </Button>
 
             {apiError && (
@@ -126,7 +123,7 @@ const Index = () => {
               </div>
             )}
 
-            {recipe && (
+            {recipe && !isLoading && (
               <div className="prose dark:prose-invert max-w-none border-t pt-6">
                 <ReactMarkdown>{recipe}</ReactMarkdown>
               </div>

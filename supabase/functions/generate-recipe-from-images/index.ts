@@ -1,12 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
-import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Helper to create a Supabase client with the service role for admin tasks
 const createAdminClient = () => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -16,10 +15,7 @@ const createAdminClient = () => {
   }
 
   return createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
+    auth: { autoRefreshToken: false, persistSession: false }
   });
 };
 
@@ -31,7 +27,7 @@ serve(async (req) => {
   try {
     const supabaseAdmin = createAdminClient();
 
-    // 1. Authenticate the user
+    // 1. Authenticate user
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Missing authorization header.' }), {
@@ -51,8 +47,7 @@ serve(async (req) => {
 
     // 2. Check daily usage limit
     const today = new Date();
-    today.setUTCHours(0, 0, 0, 0); // Start of the current day in UTC
-
+    today.setUTCHours(0, 0, 0, 0);
     const { count, error: countError } = await supabaseAdmin
       .from('recipe_generations')
       .select('*', { count: 'exact', head: true })
@@ -70,10 +65,10 @@ serve(async (req) => {
       });
     }
 
-    // 3. Process the request and call the AI
-    const { prompt } = await req.json();
-    if (!prompt) {
-      return new Response(JSON.stringify({ error: 'No prompt provided.' }), {
+    // 3. Process image data and call AI
+    const { images } = await req.json();
+    if (!images || !Array.isArray(images) || images.length === 0) {
+      return new Response(JSON.stringify({ error: 'No images provided.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       });
@@ -85,14 +80,19 @@ serve(async (req) => {
     }
     const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
 
+    const textPart = {
+      text: `You are a creative chef. Based on the following images of ingredients, generate a simple recipe. The recipe must have a catchy title, a list of ingredients (including quantities), and clear, step-by-step instructions. If the images do not contain recognizable food ingredients, respond with a friendly message explaining that you cannot create a recipe. Format your entire response in markdown.`
+    };
+
+    const imageParts = images.map(base64Image => ({
+      inline_data: {
+        mime_type: 'image/jpeg',
+        data: base64Image
+      }
+    }));
+
     const requestBody = {
-      contents: [
-        {
-          parts: [
-            { text: `You are a creative chef. Based on the following ingredients, generate a simple recipe. The recipe must have a catchy title, a list of ingredients (including quantities), and clear, step-by-step instructions. If the prompt does not contain recognizable food ingredients, respond with a friendly message explaining that you cannot create a recipe. Format your entire response in markdown. Ingredients: ${prompt}` },
-          ],
-        },
-      ],
+      contents: [{ parts: [textPart, ...imageParts] }],
     };
 
     const geminiResponse = await fetch(GEMINI_API_URL, {
@@ -113,13 +113,12 @@ serve(async (req) => {
       throw new Error('Could not parse recipe from AI response.');
     }
 
-    // 4. Log the successful generation
+    // 4. Log successful generation
     const { error: insertError } = await supabaseAdmin
       .from('recipe_generations')
       .insert({ user_id: user.id });
 
     if (insertError) {
-      // Log this error but still return the recipe to the user
       console.error('Failed to log recipe generation:', insertError.message);
     }
 

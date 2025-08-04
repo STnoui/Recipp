@@ -7,7 +7,7 @@ import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FullPageLoader } from "@/components/Loader";
 import { Button } from "@/components/ui/button";
-import { showError, showSuccess } from "@/utils/toast";
+import { showError, showSuccess, showLoading, dismissToast } from "@/utils/toast";
 
 const Login = () => {
   const { session, loading } = useAuth();
@@ -20,19 +20,40 @@ const Login = () => {
   }, [session, loading, navigate]);
 
   const handleDevLogin = async () => {
-    // NOTE: These credentials are for development convenience.
-    // First, sign up in the app with this email and password.
+    const toastId = showLoading("Attempting developer login...");
     const devEmail = 'dev@example.com';
     const devPassword = 'password123';
 
-    const { error } = await supabase.auth.signInWithPassword({
+    // Try to sign in first
+    const { error: signInError } = await supabase.auth.signInWithPassword({
       email: devEmail,
       password: devPassword,
     });
 
-    if (error) {
-      showError(`Dev login failed: ${error.message}`);
+    if (signInError) {
+      // If sign-in fails because the user doesn't exist, try to sign them up
+      if (signInError.message === 'Invalid login credentials') {
+        dismissToast(toastId);
+        const signUpToastId = showLoading("Dev user not found. Creating account...");
+        
+        const { error: signUpError } = await supabase.auth.signUp({
+          email: devEmail,
+          password: devPassword,
+        });
+
+        dismissToast(signUpToastId);
+        if (signUpError) {
+          showError(`Failed to create dev user: ${signUpError.message}`);
+        } else {
+          showSuccess('Dev user created and logged in!');
+          navigate('/');
+        }
+      } else {
+        dismissToast(toastId);
+        showError(`Dev login failed: ${signInError.message}`);
+      }
     } else {
+      dismissToast(toastId);
       showSuccess('Logged in as Developer');
       navigate('/');
     }
