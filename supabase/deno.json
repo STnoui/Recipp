@@ -6,10 +6,6 @@
   "lint": {
     "files": {
       "include": ["functions/"]
-    },
-    "rules": {
-      "tags": ["recommended"],
-      "exclude": ["no-explicit-any"]
     }
   },
   "fmt": {
