@@ -53,10 +53,22 @@ const Index = () => {
       showSuccess("Your recipe is ready!");
 
     } catch (error: any) {
-      console.error("Full error object from Supabase:", error); // Enhanced logging
-      const errorMessage = error.context?.error || error.message || "An unexpected error occurred.";
-      const errorDetails = error.context?.details ? `Details: ${JSON.stringify(error.context.details)}` : '';
-      showError(`${errorMessage} ${errorDetails}`);
+      console.error("Full error object from Supabase:", error);
+
+      // Default error message
+      let displayMessage = error.message || "An unexpected error occurred.";
+
+      // If we have a more specific error from the function, use that.
+      if (error.context && error.context.error) {
+        displayMessage = error.context.error;
+        if (error.context.details) {
+          // Append the raw details string from the server.
+          // This will contain the actual error from the Google API.
+          displayMessage += `\nDetails: ${error.context.details}`;
+        }
+      }
+      
+      showError(displayMessage);
     } finally {
       setIsLoading(false);
     }
