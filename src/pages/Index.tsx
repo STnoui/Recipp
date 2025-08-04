@@ -205,11 +205,14 @@ const Index = () => {
             )}
 
             {isLoading && !apiError && (
-              <div className="space-y-4 pt-4">
-                <Skeleton className="h-8 w-1/2" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
+              <div className="text-center py-4">
+                <p className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">Generating your recipe, please wait...</p>
+                <div className="space-y-4">
+                  <Skeleton className="h-8 w-1/2 mx-auto" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4 mx-auto" />
+                </div>
               </div>
             )}
 
