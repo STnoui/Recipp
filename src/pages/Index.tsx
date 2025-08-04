@@ -12,6 +12,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { FullPageLoader } from "@/components/Loader";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 const Index = () => {
   const { session, loading } = useAuth();
@@ -22,6 +24,7 @@ const Index = () => {
   const [recipe, setRecipe] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [recipeComplexity, setRecipeComplexity] = useState<string>('Normal');
 
   useEffect(() => {
     if (!loading && !session) {
@@ -78,7 +81,7 @@ const Index = () => {
       const imagePayloads = await Promise.all(images.map(toBase64));
 
       const { data, error } = await supabase.functions.invoke('generate-recipe', {
-        body: { images: imagePayloads },
+        body: { images: imagePayloads, complexity: recipeComplexity },
       });
 
       if (error) throw error;
@@ -141,6 +144,20 @@ const Index = () => {
               </label>
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="complexity-select">Recipe Style</Label>
+              <Select value={recipeComplexity} onValueChange={setRecipeComplexity}>
+                <SelectTrigger id="complexity-select" className="w-full">
+                  <SelectValue placeholder="Select recipe style" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Simple">Simple (Basic pantry)</SelectItem>
+                  <SelectItem value="Normal">Normal (Standard pantry)</SelectItem>
+                  <SelectItem value="Expert">Expert (Well-stocked pantry)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <Button onClick={handleSubmit} disabled={isLoading || images.length === 0} className="w-full">
               {isLoading ? "Generating Recipe..." : "Generate Recipe"}
             </Button>
@@ -165,7 +182,7 @@ const Index = () => {
             )}
 
             {recipe && (
-              <div className="prose dark:prose-invert max-w-none border-t pt-6">
+              <div className="prose prose-lg dark:prose-invert max-w-none border-t pt-6">
                 <ReactMarkdown>{recipe}</ReactMarkdown>
               </div>
             )}

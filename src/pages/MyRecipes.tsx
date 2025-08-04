@@ -170,7 +170,7 @@ const MyRecipes = () => {
             <AlertDialogHeader>
               <AlertDialogTitle>{getRecipeTitle(selectedRecipe.content)}</AlertDialogTitle>
             </AlertDialogHeader>
-            <div className="prose dark:prose-invert max-h-[60vh] overflow-y-auto p-1">
+            <div className="prose prose-lg dark:prose-invert max-h-[60vh] overflow-y-auto p-1">
               <ReactMarkdown>{selectedRecipe.content}</ReactMarkdown>
             </div>
             <AlertDialogFooter>
