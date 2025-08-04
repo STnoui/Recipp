@@ -51,13 +51,17 @@ const Index = () => {
       });
 
       if (error) {
-        // This will now catch the FunctionsHttpError and display its contents
         throw error;
       }
 
-      // Display the success message from the diagnostic function as a JSON block
-      setRecipe(`\`\`\`json\n${JSON.stringify(data, null, 2)}\n\`\`\``);
-      showSuccess("Diagnostic test completed.");
+      if (data.recipe) {
+        setRecipe(data.recipe);
+        showSuccess("Your recipe is ready!");
+      } else {
+        // This handles cases where the function returns a success status but no recipe.
+        // The backend function is designed to avoid this, but it's good practice to be safe.
+        throw new Error("Received an unexpected response from the server. The recipe was missing.");
+      }
 
     } catch (error: any) {
       console.error("Full error object from Supabase:", error);
@@ -94,7 +98,7 @@ const Index = () => {
             )}
 
             <Button onClick={handleSubmit} disabled={isLoading || !file} className="w-full">
-              {isLoading ? "Running Diagnostic Test..." : "Run Diagnostic"}
+              {isLoading ? "Generating Recipe..." : "Generate Recipe"}
             </Button>
 
             {apiError && (
@@ -113,6 +117,8 @@ const Index = () => {
               <div className="space-y-4 pt-4">
                 <Skeleton className="h-8 w-1/2" />
                 <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
               </div>
             )}
 
