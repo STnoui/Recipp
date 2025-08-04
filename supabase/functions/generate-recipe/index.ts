@@ -21,7 +21,7 @@ serve(async (req) => {
       });
     }
 
-    const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
+    const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GEMINI_API_KEY}`;
 
     const formData = await req.formData();
     const imageFile = formData.get('image') as File;
@@ -41,7 +41,7 @@ serve(async (req) => {
       contents: [
         {
           parts: [
-            { text: "You are a creative chef. Based on the ingredients in this image, generate a simple recipe. The recipe should have a catchy title, a list of ingredients (including quantities), and clear, step-by-step instructions. If the image does not contain recognizable food ingredients, respond with a friendly message saying you can't create a recipe from the image. Format your response in markdown." },
+            { text: "You are a creative chef with advanced reasoning abilities. First, carefully analyze the ingredients shown in the image. Consider possible flavor combinations and what kind of dish would be best. Then, based on your analysis, generate a simple recipe. The recipe must have a catchy title, a list of ingredients (including quantities), and clear, step-by-step instructions. If the image does not contain recognizable food ingredients, respond with a friendly message explaining that you cannot create a recipe. Format your entire response in markdown." },
             {
               inline_data: {
                 mime_type: imageFile.type,
