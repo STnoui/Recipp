@@ -22,21 +22,21 @@ This document outlines the development plan for the Recipe AI application. It se
 
 ---
 
-## 🎯 **Phase 2: User-Centric Features (Up Next)**
+## ✅ **Phase 2: User-Centric Features (In Progress)**
 
--   [ ] **Recipe History & Management:**
-    -   [ ] Create a new database table to store generated recipes linked to a user ID.
-    -   [ ] Automatically save every successfully generated recipe.
-    -   [ ] Create a "My Recipes" page to display a user's saved recipes.
-    -   [ ] Allow users to view, "favorite," and delete recipes from their history.
--   [ ] **User Profile Page:**
-    -   [ ] Create a simple profile page.
-    -   [ ] Display user information (email, avatar from Google).
-    -   [ ] Show usage stats (e.g., "2/3 recipes used today").
--   [ ] **UI/UX Enhancements:**
+-   [x] **Recipe History & Management:**
+    -   [x] Create a new database table to store generated recipes linked to a user ID.
+    -   [x] Automatically save every successfully generated recipe.
+    -   [x] Create a "My Recipes" page to display a user's saved recipes.
+    -   [x] Allow users to view, "favorite," and delete recipes from their history.
+-   [x] **User Profile & Settings Menu:**
+    -   [x] Create a slide-out menu for account management.
+    -   [x] Display user information (name, avatar from Google).
+    -   [x] Implement account deletion functionality.
+-   [x] **UI/UX Enhancements:**
     -   [ ] Add a "Copy to Clipboard" button for the recipe text.
-    -   [ ] Improve the layout of the displayed recipe for better readability.
-    -   [ ] Add a persistent dark/light mode toggle in the header.
+    -   [x] Improve the layout of the displayed recipe for better readability.
+    -   [x] Add a persistent dark/light mode toggle in the account menu.
 
 ---
 

@@ -2,10 +2,12 @@ import { useState, useEffect, createContext, useContext, FC, ReactNode } from 'r
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
 import { showError } from '@/utils/toast';
+import { Profile } from '@/types';
 
 interface AuthContextType {
   session: Session | null;
   user: User | null;
+  profile: Profile | null;
   loading: boolean;
   signInAsDeveloper: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -16,21 +18,52 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+    const getSessionAndProfile = async () => {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       setSession(session);
       setUser(session?.user ?? null);
+
+      if (session?.user) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (error) {
+          console.error("Error fetching profile on initial load", error);
+        } else {
+          setProfile(data);
+        }
+      }
       setLoading(false);
     };
 
-    getSession();
+    getSessionAndProfile();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      if (session?.user) {
+         const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (error) {
+          console.error("Error fetching profile on auth change", error);
+          setProfile(null);
+        } else {
+          setProfile(data);
+        }
+      } else {
+        setProfile(null);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -39,7 +72,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const signInAsDeveloper = async () => {
     if (import.meta.env.DEV) {
       const randomString = Math.random().toString(36).substring(2, 10);
-      // Using a different domain to avoid potential blocklists and align with user settings.
       const email = `dev-${randomString}@local.dev`;
       const password = 'strong-dev-password-123!';
       
@@ -71,6 +103,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const value = {
     session,
     user,
+    profile,
     loading,
     signInAsDeveloper,
     signOut,
