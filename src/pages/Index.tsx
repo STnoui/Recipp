@@ -51,26 +51,28 @@ const Index = () => {
       });
 
       if (error) {
+        // This will catch network-level errors, but not application errors
         throw error;
       }
 
-      if (data.recipe) {
+      // Check the response body for our application-level error
+      if (data.error) {
+        const fullError = JSON.stringify(data.error, null, 2);
+        setApiError(fullError);
+        showError("An error occurred. See details below the button.");
+      } else if (data.recipe) {
         setRecipe(data.recipe);
         showSuccess("Your recipe is ready!");
       } else {
-        // This handles cases where the function returns a success status but no recipe.
-        // The backend function is designed to avoid this, but it's good practice to be safe.
-        throw new Error("Received an unexpected response from the server. The recipe was missing.");
+        // This case handles an unexpected response format from the server
+        throw new Error("Received an unexpected response format from the server.");
       }
 
     } catch (error: any) {
       console.error("Full error object from Supabase:", error);
-      
       const fullError = JSON.stringify(error, null, 2);
-      
       setApiError(fullError);
-      showError("An error occurred. See details below the button.");
-
+      showError("A critical error occurred while communicating with the server.");
     } finally {
       setIsLoading(false);
     }

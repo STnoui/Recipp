@@ -14,11 +14,10 @@ serve(async (req) => {
   try {
     const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     if (!GEMINI_API_KEY) {
-      console.error("CRITICAL: GEMINI_API_KEY is not set in environment variables.");
       const errorPayload = { error: 'Server configuration error: Missing API key.' };
-      return new Response(JSON.stringify(errorPayload), {
+      return new Response(JSON.stringify({ error: errorPayload }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
+        status: 200,
       });
     }
 
@@ -29,9 +28,9 @@ serve(async (req) => {
 
     if (!imageFile) {
       const errorPayload = { error: 'No image provided' };
-      return new Response(JSON.stringify(errorPayload), {
+      return new Response(JSON.stringify({ error: errorPayload }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
+        status: 200,
       });
     }
 
@@ -72,9 +71,9 @@ serve(async (req) => {
           body: errorBody || "Response body was empty."
         }
       };
-      return new Response(JSON.stringify(errorPayload), {
+      return new Response(JSON.stringify({ error: errorPayload }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
+        status: 200,
       });
     }
 
@@ -83,9 +82,9 @@ serve(async (req) => {
 
     if (!recipeText) {
         const errorPayload = { error: 'Could not parse recipe from AI response.', details: geminiData };
-        return new Response(JSON.stringify(errorPayload), {
+        return new Response(JSON.stringify({ error: errorPayload }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 500,
+            status: 200,
         });
     }
 
@@ -96,9 +95,9 @@ serve(async (req) => {
 
   } catch (error) {
     const errorPayload = { error: 'A critical error occurred in the edge function.', details: error.message };
-    return new Response(JSON.stringify(errorPayload), {
+    return new Response(JSON.stringify({ error: errorPayload }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 500,
+      status: 200,
     });
   }
 })
