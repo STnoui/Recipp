@@ -42,7 +42,8 @@ serve(async (req) => {
 
     const userId = user.id;
 
-    // 2. Check daily usage limit
+    // 2. Check daily usage limit - Temporarily disabled for unlimited access
+    /*
     const { count: generationsToday, error: countError } = await supabaseAdmin
       .from('recipe_generations')
       .select('*', { count: 'exact' })
@@ -61,6 +62,7 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+    */
 
     // 3. Parse request body
     const { images, complexity, dietaryPreferences, otherPreferences } = await req.json();
