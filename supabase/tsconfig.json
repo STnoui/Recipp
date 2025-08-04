@@ -2,8 +2,17 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "ESNext",
-    "types": ["deno-types"],
-    "moduleResolution": "node",
-    "strict": true
-  }
+    "lib": ["esnext", "dom"], // 'dom' is useful for fetch API types
+    "moduleResolution": "node", // 'node' is generally robust for module resolution
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true, // Skips type checking of declaration files to prevent issues with external types
+    "forceConsistentCasingInFileNames": true,
+    "types": [] // Clear specific types array to rely on 'include'
+  },
+  "include": [
+    "**/*.ts", // Include all TypeScript files in the directory and subdirectories
+    "**/*.d.ts" // Explicitly include all declaration files
+  ],
+  "exclude": ["node_modules"]
 }
