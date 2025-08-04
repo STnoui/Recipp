@@ -1,8 +1,17 @@
 {
   "compilerOptions": {
-    "types": ["https://esm.sh/@supabase/functions-js/src/edge-runtime.d.ts"],
+    "lib": ["deno.ns", "dom"],
     "module": "esnext",
-    "moduleResolution": "bundler"
+    "target": "esnext",
+    "moduleResolution": "bundler",
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "noFallthroughCasesInSwitch": true,
+    "allowSyntheticDefaultImports": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "types": ["https://esm.sh/@supabase/functions-js/src/edge-runtime.d.ts"]
   },
   "include": ["./functions/**/*.ts"]
 }
