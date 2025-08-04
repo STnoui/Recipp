@@ -60,13 +60,8 @@ const Index = () => {
     } catch (error: any) {
       console.error("Full error object from Supabase:", error);
       
-      let fullError = "An unexpected error occurred.";
-      if (error.context) {
-        // Stringify the whole context to get all details.
-        fullError = JSON.stringify(error.context, null, 2);
-      } else {
-        fullError = error.message;
-      }
+      // Display the entire raw error object to diagnose the issue.
+      const fullError = JSON.stringify(error, null, 2);
       
       setApiError(fullError);
       showError("An error occurred. See details below the button.");
