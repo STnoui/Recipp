@@ -51,11 +51,13 @@ const Index = () => {
       });
 
       if (error) {
+        // This will now catch the FunctionsHttpError and display its contents
         throw error;
       }
 
-      setRecipe(data.recipe);
-      showSuccess("Your recipe is ready!");
+      // Display the success message from the diagnostic function as a JSON block
+      setRecipe(`\`\`\`json\n${JSON.stringify(data, null, 2)}\n\`\`\``);
+      showSuccess("Diagnostic test completed.");
 
     } catch (error: any) {
       console.error("Full error object from Supabase:", error);
@@ -92,7 +94,7 @@ const Index = () => {
             )}
 
             <Button onClick={handleSubmit} disabled={isLoading || !file} className="w-full">
-              {isLoading ? "Generating Recipe..." : "Generate Recipe"}
+              {isLoading ? "Running Diagnostic Test..." : "Run Diagnostic"}
             </Button>
 
             {apiError && (
@@ -111,8 +113,6 @@ const Index = () => {
               <div className="space-y-4 pt-4">
                 <Skeleton className="h-8 w-1/2" />
                 <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
               </div>
             )}
 
