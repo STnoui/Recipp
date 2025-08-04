@@ -2,14 +2,14 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { showError, showSuccess } from "@/utils/toast";
 import ReactMarkdown from "react-markdown";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal } from "lucide-react";
+import { Terminal, Frown } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
@@ -19,10 +19,9 @@ const Index = () => {
   const { session, loading } = useAuth();
   const navigate = useNavigate();
 
-  const [file, setFile] = useState<File | null>(null);
+  const [ingredients, setIngredients] = useState<string>("");
   const [recipe, setRecipe] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [preview, setPreview] = useState<string | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -31,23 +30,9 @@ const Index = () => {
     }
   }, [session, loading, navigate]);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = event.target.files?.[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-      setRecipe(null);
-      setApiError(null);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result as string);
-      };
-      reader.readAsDataURL(selectedFile);
-    }
-  };
-
   const handleSubmit = async () => {
-    if (!file) {
-      showError("Please select an image first.");
+    if (!ingredients.trim()) {
+      showError("Please enter some ingredients.");
       return;
     }
 
@@ -55,12 +40,9 @@ const Index = () => {
     setRecipe(null);
     setApiError(null);
 
-    const formData = new FormData();
-    formData.append('image', file);
-
     try {
       const { data, error } = await supabase.functions.invoke('generate-recipe', {
-        body: formData,
+        body: { prompt: ingredients },
       });
 
       if (error) {
@@ -68,9 +50,14 @@ const Index = () => {
       }
 
       if (data.error) {
-        const fullError = JSON.stringify(data.error, null, 2);
-        setApiError(fullError);
-        showError("An error occurred. See details below the button.");
+        // Handle specific "limit reached" error from the function
+        if (data.error.includes("daily limit")) {
+            setApiError(data.error);
+        } else {
+            const fullError = typeof data.error === 'object' ? JSON.stringify(data.error, null, 2) : data.error;
+            setApiError(fullError);
+        }
+        showError("An error occurred. See details below.");
       } else if (data.recipe) {
         setRecipe(data.recipe);
         showSuccess("Your recipe is ready!");
@@ -104,24 +91,24 @@ const Index = () => {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="picture">Upload Ingredients Image</Label>
-              <Input id="picture" type="file" accept="image/*" onChange={handleFileChange} className="file:text-primary"/>
+              <Label htmlFor="ingredients">Enter your ingredients (e.g., "chicken breast, rice, broccoli")</Label>
+              <Textarea
+                id="ingredients"
+                placeholder="What do you have in your kitchen?"
+                value={ingredients}
+                onChange={(e) => setIngredients(e.target.value)}
+                rows={4}
+              />
             </div>
 
-            {preview && (
-              <div className="flex justify-center border rounded-lg overflow-hidden">
-                <img src={preview} alt="Ingredients preview" className="max-h-64 object-contain" />
-              </div>
-            )}
-
-            <Button onClick={handleSubmit} disabled={isLoading || !file} className="w-full">
+            <Button onClick={handleSubmit} disabled={isLoading || !ingredients.trim()} className="w-full">
               {isLoading ? "Generating Recipe..." : "Generate Recipe"}
             </Button>
 
             {apiError && (
               <Alert variant="destructive">
-                <Terminal className="h-4 w-4" />
-                <AlertTitle>API Error</AlertTitle>
+                {apiError.includes("daily limit") ? <Frown className="h-4 w-4" /> : <Terminal className="h-4 w-4" />}
+                <AlertTitle>{apiError.includes("daily limit") ? "Limit Reached" : "API Error"}</AlertTitle>
                 <AlertDescription>
                   <pre className="whitespace-pre-wrap break-all font-mono text-xs">
                     {apiError}

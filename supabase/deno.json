@@ -1,19 +1,7 @@
 {
   "compilerOptions": {
-    "lib": ["deno.ns", "dom", "dom.iterable", "esnext"],
-    "strict": true
-  },
-  "lint": {
-    "files": {
-      "include": ["functions/"]
-    }
-  },
-  "fmt": {
-    "options": {
-      "useTabs": false,
-      "lineWidth": 80,
-      "indentWidth": 2,
-      "singleQuote": false
-    }
+    "lib": ["deno.ns", "esnext"],
+    "module": "esnext",
+    "target": "esnext"
   }
 }
