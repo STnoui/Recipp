@@ -53,7 +53,10 @@ const Index = () => {
       showSuccess("Your recipe is ready!");
     } catch (error: any) {
       console.error("Error generating recipe:", error);
-      showError(error.message || "An unexpected error occurred.");
+      // The actual error from the Edge Function is in the 'context' property
+      const errorMessage = error.context?.error || error.message || "An unexpected error occurred.";
+      const errorDetails = error.context?.details ? `Details: ${JSON.stringify(error.context.details)}` : '';
+      showError(`${errorMessage} ${errorDetails}`);
     } finally {
       setIsLoading(false);
     }
