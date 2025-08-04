@@ -70,9 +70,13 @@ serve(async (req) => {
     const recipeText = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!recipeText) throw new Error('Could not parse recipe from AI response.');
 
-    // 4. Log successful generation
+    // 4. Log successful generation and save recipe
     const { error: insertError } = await supabaseAdmin.from('recipe_generations').insert({ user_id: user.id });
     if (insertError) console.error('Failed to log recipe generation:', insertError.message);
+
+    const { error: insertRecipeError } = await supabaseAdmin.from('recipes').insert({ user_id: user.id, content: recipeText });
+    if (insertRecipeError) console.error('Failed to save recipe:', insertRecipeError.message);
+
 
     // 5. Return recipe
     return new Response(JSON.stringify({ recipe: recipeText }), {
