@@ -23,7 +23,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
   useEffect(() => {
     const getSessionAndProfile = async () => {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession(); // Removed unused 'error: sessionError'
       setSession(session);
       setUser(session?.user ?? null);
 
