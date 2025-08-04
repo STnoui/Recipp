@@ -32,14 +32,16 @@ const Login = () => {
                     theme={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}
                 />
                 {import.meta.env.DEV && (
-                    <div className="mt-6">
+                    <div className="mt-6 text-center">
                         <Button
-                            variant="outline"
                             className="w-full"
                             onClick={signInAsDeveloper}
                         >
-                            Login as Dev
+                            Bypass Login (For Dev)
                         </Button>
+                        <p className="text-xs text-gray-500 mt-2">
+                            This will create a temporary account for development.
+                        </p>
                     </div>
                 )}
             </div>
