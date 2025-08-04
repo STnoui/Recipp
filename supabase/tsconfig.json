@@ -1,18 +1,27 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ESNext",
     "module": "ESNext",
-    "lib": ["esnext", "dom"], // 'dom' is useful for fetch API types
-    "moduleResolution": "node", // 'node' is generally robust for module resolution
+    "lib": ["ESNext"],
     "strict": true,
     "esModuleInterop": true,
-    "skipLibCheck": true, // Skips type checking of declaration files to prevent issues with external types
+    "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "types": [] // Clear specific types array to rely on 'include'
+    "moduleResolution": "Bundler",
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      // This path mapping is typically for the client-side app,
+      // but including it here for completeness if functions ever need to reference shared types.
+      // For Deno, direct URL imports are preferred.
+      "@/*": ["./*"]
+    }
   },
   "include": [
-    "**/*.ts", // Include all TypeScript files in the directory and subdirectories
-    "**/*.d.ts" // Explicitly include all declaration files
+    "functions/**/*.ts",
+    "functions/**/*.d.ts" // This line ensures that types.d.ts files are included
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }

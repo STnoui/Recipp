@@ -6,11 +6,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
+const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-if (!OPENROUTER_API_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+if (!GEMINI_API_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   console.error("Missing environment variables!");
   Deno.exit(1); // Exit if critical environment variables are missing
 }
@@ -70,9 +70,9 @@ serve(async (req) => {
     }
 
     const imageParts = images.map((img: { mimeType: string, data: string }) => ({
-      type: "image_url",
-      image_url: {
-        url: `data:${img.mimeType};base64,${img.data}`,
+      inlineData: {
+        mimeType: img.mimeType,
+        data: img.data,
       },
     }));
 
@@ -88,39 +88,39 @@ serve(async (req) => {
       promptContent += ` Also consider these preferences: ${otherPreferences}.`;
     }
 
-    const messages = [
+    const contents = [
       {
         role: "user",
-        content: [
-          { type: "text", text: promptContent },
+        parts: [
+          { text: promptContent },
           ...imageParts,
         ],
       },
     ];
 
-    // 4. Call OpenRouter API
-    const openRouterResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    // 4. Call Google Gemini API
+    const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GEMINI_API_KEY}`, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "deepseek-chat", // This is the DeepSeek-V3 model
-        messages: messages,
-        temperature: 0.7,
-        max_tokens: 1500,
+        contents: contents,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1500,
+        },
       }),
     });
 
-    if (!openRouterResponse.ok) {
-      const errorData = await openRouterResponse.json();
-      console.error("OpenRouter API error:", errorData);
-      throw new Error(`OpenRouter API error: ${errorData.message || openRouterResponse.statusText}`);
+    if (!geminiResponse.ok) {
+      const errorData = await geminiResponse.json();
+      console.error("Gemini API error:", errorData);
+      throw new Error(`Gemini API error: ${errorData.error?.message || geminiResponse.statusText}`);
     }
 
-    const openRouterData = await openRouterResponse.json();
-    const generatedRecipe = openRouterData.choices[0].message.content;
+    const geminiData = await geminiResponse.json();
+    const generatedRecipe = geminiData.candidates[0].content.parts[0].text;
 
     // 5. Save recipe and log generation
     const { error: insertRecipeError } = await supabaseAdmin
