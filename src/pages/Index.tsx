@@ -14,6 +14,8 @@ import { Header } from "@/components/Header";
 import { FullPageLoader } from "@/components/Loader";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 const Index = () => {
   const { session, loading } = useAuth();
@@ -24,7 +26,11 @@ const Index = () => {
   const [recipe, setRecipe] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  
+  // New state for personalization
   const [recipeComplexity, setRecipeComplexity] = useState<string>('Normal');
+  const [dietaryPreferences, setDietaryPreferences] = useState<string[]>([]);
+  const [otherPreferences, setOtherPreferences] = useState('');
 
   useEffect(() => {
     if (!loading && !session) {
@@ -81,7 +87,12 @@ const Index = () => {
       const imagePayloads = await Promise.all(images.map(toBase64));
 
       const { data, error } = await supabase.functions.invoke('generate-recipe', {
-        body: { images: imagePayloads, complexity: recipeComplexity },
+        body: { 
+          images: imagePayloads, 
+          complexity: recipeComplexity,
+          dietaryPreferences,
+          otherPreferences
+        },
       });
 
       if (error) throw error;
@@ -144,18 +155,39 @@ const Index = () => {
               </label>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="complexity-select">Recipe Style</Label>
-              <Select value={recipeComplexity} onValueChange={setRecipeComplexity}>
-                <SelectTrigger id="complexity-select" className="w-full">
-                  <SelectValue placeholder="Select recipe style" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Simple">Simple (Basic pantry)</SelectItem>
-                  <SelectItem value="Normal">Normal (Standard pantry)</SelectItem>
-                  <SelectItem value="Expert">Expert (Well-stocked pantry)</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="complexity-select">Recipe Style</Label>
+                <Select value={recipeComplexity} onValueChange={setRecipeComplexity}>
+                  <SelectTrigger id="complexity-select" className="w-full">
+                    <SelectValue placeholder="Select recipe style" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Simple">Simple (Basic pantry)</SelectItem>
+                    <SelectItem value="Normal">Normal (Standard pantry)</SelectItem>
+                    <SelectItem value="Expert">Expert (Well-stocked pantry)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Dietary Needs</Label>
+                <ToggleGroup type="multiple" value={dietaryPreferences} onValueChange={setDietaryPreferences} variant="outline" className="flex-wrap justify-start">
+                  <ToggleGroupItem value="Vegetarian">Vegetarian</ToggleGroupItem>
+                  <ToggleGroupItem value="Vegan">Vegan</ToggleGroupItem>
+                  <ToggleGroupItem value="Gluten-Free">Gluten-Free</ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="other-preferences">Other Preferences</Label>
+                <Textarea 
+                  id="other-preferences"
+                  placeholder="e.g., 'Make it spicy', 'low-carb', 'for kids'..."
+                  value={otherPreferences}
+                  onChange={(e) => setOtherPreferences(e.target.value)}
+                />
+              </div>
             </div>
 
             <Button onClick={handleSubmit} disabled={isLoading || images.length === 0} className="w-full">

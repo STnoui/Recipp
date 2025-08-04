@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "types": ["https://esm.sh/@supabase/functions-js/src/edge-runtime.d.ts"],
+    "module": "esnext",
+    "moduleResolution": "bundler"
+  },
+  "include": ["./**/*.ts"]
+}
