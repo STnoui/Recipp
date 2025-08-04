@@ -1,11 +1,9 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
+    "target": "ES2020",
     "module": "ESNext",
-    "lib": ["ESNext", "DOM"],
     "types": ["deno-types"],
     "moduleResolution": "node",
-    "esModuleInterop": true,
     "strict": true
   }
 }

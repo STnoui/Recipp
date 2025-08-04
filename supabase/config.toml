@@ -1,0 +1,5 @@
+[project]
+id = "tpunvbnfmmrnyiduyqwv"
+
+[functions]
+generate-recipe = { verify_jwt = false }
