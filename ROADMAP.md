@@ -96,8 +96,8 @@ This document outlines the development plan for the Recipe AI application. It se
 
 ### **Monetization & Platform Growth**
 *   **Premium Tier ("Recipe Pro"):**
-    *   Unlimited recipe generations.
-    *   Advanced features like meal planning and nutritional analysis.
+    *   Increased daily limit (e.g., 10 generations/day).
+    *   "Family Plan": Invite a friend to share the daily generation limit.
     *   Saving unlimited recipes to history.
     *   Access to all customization and dietary filters.
 *   **Strategic Partnerships:**
