@@ -49,14 +49,8 @@ const Index = () => {
         throw error;
       }
 
-      // For the diagnostic step, we'll show the success message from the function
-      if (data.message) {
-        showSuccess(data.message);
-        setRecipe(`**Debug Info:**\n\`\`\`json\n${JSON.stringify(data, null, 2)}\n\`\`\``);
-      } else {
-        setRecipe(data.recipe);
-        showSuccess("Your recipe is ready!");
-      }
+      setRecipe(data.recipe);
+      showSuccess("Your recipe is ready!");
 
     } catch (error: any) {
       console.error("Full error object from Supabase:", error); // Enhanced logging
@@ -90,13 +84,15 @@ const Index = () => {
             )}
 
             <Button onClick={handleSubmit} disabled={isLoading || !file} className="w-full">
-              {isLoading ? "Diagnosing..." : "Run Diagnostic"}
+              {isLoading ? "Generating Recipe..." : "Generate Recipe"}
             </Button>
 
             {isLoading && (
               <div className="space-y-4 pt-4">
                 <Skeleton className="h-8 w-1/2" />
                 <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
               </div>
             )}
 
